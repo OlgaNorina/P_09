@@ -37,7 +37,6 @@ class SpaceMissionModel(BaseModel):
     budget_millions: float = Field(ge=1.0, le=10000.0)
 
     @model_validator(mode="after")
-    
     def mission_validation_rules(self) -> Self:
         if not self.mission_id.startswith("M"):
             raise ValueError("Mission ID must start with 'M'")
@@ -104,7 +103,7 @@ def main() -> None:
         "launch_date": '2024-05-20T15:30:00'
     }
 
-    mars_crew: SpaceMissionModel = SpaceMissionModel.model_validate(content_mars)
+    mars_crew = SpaceMissionModel.model_validate(content_mars)
 
     print("Mission:", mars_crew.mission_name)
     print("ID:", mars_crew.mission_id)
@@ -113,8 +112,7 @@ def main() -> None:
     print(f"Budget: ${mars_crew.budget_millions}.0M")
     print("Crew size:", len(mars_crew.crew))
     print("Crew members:")
-    for i in range(len(mars_crew.crew)):
-        member: str = mars_crew.crew[i]
+    for member in mars_crew.crew:
         print(
             f"- {member.name} ({member.rank.value}) - "
             f"{member.specialization.capitalize()}"
@@ -150,7 +148,7 @@ def main() -> None:
     print("\n=========================================")
     print("Expected validation error:")
     try:
-        saturn_crew1: SpaceMissionModel = SpaceMissionModel.model_validate(content_saturn1)
+        saturn_crew1 = SpaceMissionModel.model_validate(content_saturn1)
         print("Mission:", saturn_crew1.mission_name)
     except ValidationError as err:
         print(err.errors()[0]['msg'].replace("Value error, ", ""))
@@ -194,7 +192,7 @@ def main() -> None:
         }
 
     try:
-        saturn_crew2: SpaceMissionModel = SpaceMissionModel.model_validate(content_saturn2)
+        saturn_crew2 = SpaceMissionModel.model_validate(content_saturn2)
         print("Mission:", saturn_crew2.mission_name)
     except ValidationError as err2:
         print(err2.errors()[0]['msg'].replace("Value error, ", ""))
@@ -238,7 +236,7 @@ def main() -> None:
         }
 
     try:
-        saturn_crew3: SpaceMissionModel = SpaceMissionModel.model_validate(content_saturn3)
+        saturn_crew3 = SpaceMissionModel.model_validate(content_saturn3)
         print("Mission:", saturn_crew3.mission_name)
     except ValidationError as err2:
         print(err2.errors()[0]['msg'].replace("Value error, ", ""))
@@ -262,6 +260,8 @@ def main() -> None:
     elif file_path.endswith('.py'):
         import importlib.util
         spec = importlib.util.spec_from_file_location("data_module", file_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Cannot load module from '{file_path}'")
         data_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(data_module)
         raw_records = getattr(data_module, "SPACE_MISSIONS", [])

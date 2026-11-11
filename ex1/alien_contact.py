@@ -35,7 +35,6 @@ class AlienContactModel(BaseModel):
     is_verified: bool = Field(default=False)
 
     @model_validator(mode="after")
-    @classmethod
     def check_signal(self) -> "AlienContactModel":
         if not self.contact_id.startswith("AC"):
             raise ValueError("Alien Contact must start with 'AC'")
@@ -74,7 +73,7 @@ def main() -> None:
         "Message": "Greetings from Zeta Reticuli",
             }
 
-    ac_2024_001: AlienContactModel = AlienContactModel(**contact001)
+    ac_2024_001 = AlienContactModel.model_validate(contact001)
     print("ID:", ac_2024_001.contact_id)
     print("Type:", ac_2024_001.contact_type.value)
     print("Location:", ac_2024_001.location)
@@ -97,7 +96,8 @@ def main() -> None:
             }
 
     try:
-        ac_2024_002: AlienContactModel = AlienContactModel(**contact002)
+        ac_2024_002 = AlienContactModel.model_validate(contact002)
+        print(ac_2024_002.contact_id)
     except ValidationError as err:
         print(err.errors()[0]['msg'].replace("Value error, ", ""))
 
@@ -114,8 +114,8 @@ def main() -> None:
         }
 
     try:
-        ac_2024_002: AlienContactModel = AlienContactModel(**contact003)
-        print("ID:", ac_2024_002.contact_id)
+        ac_2024_003 = AlienContactModel.model_validate(contact003)
+        print("ID:", ac_2024_003.contact_id)
     except ValidationError as err:
         print(err.errors()[0]['msg'].replace("Value error, ", ""))
 
@@ -138,6 +138,8 @@ def main() -> None:
     elif file_path.endswith('.py'):
         import importlib.util
         spec = importlib.util.spec_from_file_location("data_module", file_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Cannot load module from '{file_path}'")
         data_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(data_module)
         raw_records = getattr(data_module, "ALIEN_CONTACTS", [])
@@ -161,7 +163,8 @@ def main() -> None:
             for e in err.errors():
                 field_name = e['loc'][-1] if e['loc'] else 'root'
                 print(
-                    f"  Contact [{idx}] ❌ INVALID: [{field_name}]: {e['msg']}"
+                    f"  Contact [{idx}] ❌ INVALID: [{field_name}]: "
+                    f"{e['msg'].replace("Value error, ", "")}"
                 )
 
 

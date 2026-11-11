@@ -31,7 +31,7 @@ def main() -> None:
              "is_operational": True,
         }
 
-    iss001: SpaceStationModel = SpaceStationModel(**content001)
+    iss001: SpaceStationModel = SpaceStationModel.model_validate(content001)
     print("Valid station created:")
     print("ID:", iss001.station_id)
     print("Name:", iss001.name)
@@ -53,7 +53,7 @@ def main() -> None:
              "is_operational": True,
         }
     try:
-        iss002: SpaceStationModel = SpaceStationModel(**content002)
+        iss002 = SpaceStationModel.model_validate(content002)
         print("ID:", iss002.station_id)
     except ValidationError:
         pass
@@ -77,6 +77,8 @@ def main() -> None:
     elif file_path.endswith('.py'):
         import importlib.util
         spec = importlib.util.spec_from_file_location("data_module", file_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Cannot load module from '{file_path}'")
         data_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(data_module)
         raw_records = getattr(data_module, "SPACE_STATIONS", [])
@@ -91,7 +93,7 @@ def main() -> None:
 
     for idx, row in enumerate(raw_records, start=1):
         try:
-            station = SpaceStationModel(**row)
+            station = SpaceStationModel.model_validate(row)
             print(f"  Mission [{station.station_id}]: ✅ {station.name}")
         except ValidationError as err:
             for e in err.errors():
